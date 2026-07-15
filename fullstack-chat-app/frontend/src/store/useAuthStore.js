@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { axiosInstance } from "../lib/axios.js";
+import { axiosInstance, getApiErrorMessage } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
@@ -40,7 +40,7 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Account created successfully");
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(getApiErrorMessage(error, "Unable to create account"));
     } finally {
       set({ isSigningUp: false });
     }
@@ -55,7 +55,7 @@ export const useAuthStore = create((set, get) => ({
 
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(getApiErrorMessage(error, "Unable to log in"));
     } finally {
       set({ isLoggingIn: false });
     }
@@ -68,7 +68,7 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Logged out successfully");
       get().disconnectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(getApiErrorMessage(error, "Unable to log out"));
     }
   },
 
@@ -80,7 +80,7 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Profile updated successfully");
     } catch (error) {
       console.log("error in update profile:", error);
-      toast.error(error.response.data.message);
+      toast.error(getApiErrorMessage(error, "Unable to update profile"));
     } finally {
       set({ isUpdatingProfile: false });
     }
@@ -91,6 +91,7 @@ export const useAuthStore = create((set, get) => ({
     if (!authUser || get().socket?.connected) return;
 
     const socket = io(BASE_URL, {
+      withCredentials: true,
       query: {
         userId: authUser._id,
       },
